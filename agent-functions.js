@@ -1,50 +1,57 @@
-let heroData = {
-    "id": 1,
-    "name": "npc_dota_hero_antimage",
-    "localized_name": "Anti-Mage",
-    "primary_attr": "agi",
-    "attack_type": "Melee",
-    "roles": [
-        "Carry",
-        "Escape",
-        "Nuker"
-    ],
-    "legs": 2
-}
+// Get hero data
+import heroData from "./hero-data.js";
 
-const tools = [
+// Contains schema for every tool sent to ChatGPT
+const toolsSchema = [
     {
-        "name": "getHeroData",
-        "description": "Access the hero data describing the hero.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string",
-                    "description": "The hero id"
-                }
-            },
-            "reason": {
-                "type": "string",
-                "description": "The motivation and reason behind calling this function"
+      type: "function",
+      function: {
+        name: "getHeroDataByID",
+        description: "Access the hero data describing by hero ID.",
+        parameters: {
+          type: "object",
+          properties: {
+            id: {
+              type: "string",
+              description: "The hero id"
             }
+          }
         },
-        "required": ["id", "reason"],
-        "additionalProperties": false,
-    }
-]
+        required: ["id"],
+        additionalProperties: false,
+      }
+    },
+    {
+        type: "function",
+        function: {
+          name: "getHeroDataByName",
+          description: "Access the hero data describing by hero localized name.",
+          parameters: {
+            type: "object",
+            properties: {
+              name: {
+                type: "string",
+                description: "The hero localized name"
+              }
+            }
+          },
+          required: ["name"],
+          additionalProperties: false,
+        }
+      }
+  ]
 
-const getHeroData = (id, reason) => {
-    console.log("\x1b[90m", 'In background: Agent retrives hero data.');
-    logReasoning(reason);
-    if(heroData.id === id){
-        return JSON.stringify(heroData);
-    }
-    return null;
-}
+  // Define function to get hero data
+const getHeroDataByID = (id) => {
+    console.log("\x1b[90m", 'In background: Agent retrives hero data by id with parameter ' + id + ".\x1b[37m");
+    const hero = heroData.find(hero => hero.id == id);
+    return JSON.stringify(hero);
+  }
 
-const logReasoning = (reason) => {
-    console.log("\x1b[90m", 'Reason:', reason);
-}
+const getHeroDataByName = (name) => {
+    console.log("\x1b[90m", 'In background: Agent retrives hero data by name with parameter ' + name + ".\x1b[37m");
+    const hero = heroData.find(hero => hero.localized_name.toLocaleLowerCase() == name.toLocaleLowerCase());
+    return JSON.stringify(hero);
+  }
 
-export { tools, getHeroData };
+  export {toolsSchema, getHeroDataByID, getHeroDataByName};

@@ -1,4 +1,5 @@
 // Contains hero data
+// Could be replaced by local database file
 let heroData;
 export default heroData = [
     {
