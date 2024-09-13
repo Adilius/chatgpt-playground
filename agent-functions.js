@@ -42,15 +42,15 @@ const toolsSchema = [
   ]
 
   // Define function to get hero data
-const getHeroDataByID = (id) => {
-    console.log("\x1b[90m", 'In background: Agent retrives hero data by id with parameter ' + id + ".\x1b[37m");
-    const hero = heroData.find(hero => hero.id == id);
+const getHeroDataByID = (params) => {
+    console.log("\x1b[90m", 'In background: Agent retrives hero data by id with parameter ' + JSON.stringify(params) + ".\x1b[37m");
+    const hero = heroData.find(hero => hero.id == params);
     return JSON.stringify(hero);
   }
 
-const getHeroDataByName = (name) => {
-    console.log("\x1b[90m", 'In background: Agent retrives hero data by name with parameter ' + name + ".\x1b[37m");
-    const hero = heroData.find(hero => hero.localized_name.toLocaleLowerCase() == name.toLocaleLowerCase());
+const getHeroDataByName = (params) => {
+    console.log("\x1b[90m", 'In background: Agent retrives hero data by name with parameter ' + JSON.stringify(params) + ".\x1b[37m");
+    const hero = heroData.find(hero => hero.localized_name.toLocaleLowerCase() == params.toLocaleLowerCase());
     return JSON.stringify(hero);
   }
 

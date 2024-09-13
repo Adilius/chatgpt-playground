@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import dotenv from 'dotenv';
 import prompt from 'prompt';
-import { toolsSchema, getHeroDataByID, getHeroDataByName}  from "./agent-functions.js"
+import * as agentFunctions from "./agent-functions.js"
 
 dotenv.config();
 prompt.start();
@@ -25,6 +25,21 @@ const addToMessageLog = (messageObject) => {
   messagesLog.push(messageObject);
 }
 
+
+const callAgentFunction = (functionName, functionParameters, toolCallID) => {
+  console.log(`callAgentFunction on: ${functionName} with parameters: ${JSON.stringify(functionParameters)}`);
+  agentFunctions.toolsSchema.filter(f => f.function.name == functionName).forEach((fn) => {
+    console.log(`Calling found function: ${JSON.stringify(fn["function"]["name"])}`);
+    const functionResponse = agentFunctions[functionName](...Object.values(functionParameters));
+    addToMessageLog(
+      {
+        role: 'tool',
+        content: functionResponse,
+        tool_call_id: toolCallID
+      });
+  })
+}
+
 const runPrompt = async () => {
 
   // First request
@@ -32,7 +47,7 @@ const runPrompt = async () => {
     model: "gpt-4o-mini",
     stream: false,
     messages: messagesLog,
-    tools: toolsSchema,
+    tools: agentFunctions.toolsSchema,
   });
   const responseMessage = completion["choices"][0]["message"];
   console.log('Response message:\n' + JSON.stringify(responseMessage, null, 2));
@@ -41,9 +56,13 @@ const runPrompt = async () => {
   // If any function was called in the response
   if (responseMessage.tool_calls) {
 
-    // Get tool call
+    // Get tool call values
     const toolCall = responseMessage["tool_calls"][0];
     console.log("Tool call:\n" + JSON.stringify(toolCall, null, 2));
+
+    //Get tool call ID
+    //Used in tool call response
+    const toolCallID = toolCall["id"];
 
     // Extract function name and arguments
     const toolCallName = toolCall["function"]["name"];
@@ -51,60 +70,29 @@ const runPrompt = async () => {
     console.log("Function name: " + JSON.stringify(toolCallName, null, 2));
     console.log("Arguments: " + JSON.stringify(toolCallArgs, null, 2));
 
-    let functionResult;
-    if(toolCallName=="getHeroDataByID"){
-      functionResult = getHeroDataByID(toolCallArgs["id"]);
-    }else if(toolCallName=="getHeroDataByName"){
-      functionResult = getHeroDataByName(toolCallArgs["name"]);
-    }else{
-      console.log("unexpected")
-    }
-
-    addToMessageLog(
-      {
-        role: 'tool',
-        content: functionResult,
-        tool_call_id: toolCall["id"]
-      });
+    callAgentFunction(toolCallName, toolCallArgs, toolCallID);    
 
     const completion2 = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       stream: false,
       messages: messagesLog,
-      tools: toolsSchema,
+      tools: agentFunctions.toolsSchema,
     });
     const responseMessage2 = completion2["choices"][0]["message"];
     console.log(responseMessage2);
+  } else {
+    console.log("No function call made.");
   }
 
 
 }
 
-const callFunction = (functionCall) =>{
-
-  // Extract function name
-  const functionName = functionCall.name;
-  console.log(`Function name: ${functionName}`);
-
-  // Go through tools schema to find a function name that matches
-  toolsSchema.filter(
-    func => func.name == functionName).forEach((fn) => {
-      const fnArgs = JSON.parse(functionCall.arguments);
-      const fnResponse = fn.name(...Object.values(fnArgs));
-      addToMessageLog(
-        {
-          role: 'tool',
-          content: fnResponse,
-          tool_call_id: toolCall["id"]
-        });
-    })
+function main(){
+  getUserInput();
 }
 
-
-//console.log(toolsSchema);
-
+function getUserInput(){
 // Define function for user prompt
-var userPrompt;
 prompt.get({
   properties: {
     prompt: {
@@ -124,4 +112,9 @@ prompt.get({
   addToMessageLog(userPrompt);
   runPrompt();
 });
+}
+
+main()
+  
+
 
