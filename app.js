@@ -27,9 +27,9 @@ const addToMessageLog = (messageObject) => {
 
 
 const callAgentFunction = (functionName, functionParameters, toolCallID) => {
-  console.log(`callAgentFunction on: ${functionName} with parameters: ${JSON.stringify(functionParameters)}`);
+  //console.log(`callAgentFunction on: ${functionName} with parameters: ${JSON.stringify(functionParameters)}`);
   agentFunctions.toolsSchema.filter(f => f.function.name == functionName).forEach((fn) => {
-    console.log(`Calling found function: ${JSON.stringify(fn["function"]["name"])}`);
+    //console.log(`Calling found function: ${JSON.stringify(fn["function"]["name"])}`);
     const functionResponse = agentFunctions[functionName](...Object.values(functionParameters));
     addToMessageLog(
       {
@@ -50,7 +50,7 @@ const runPrompt = async () => {
     tools: agentFunctions.toolsSchema,
   });
   const responseMessage = completion["choices"][0]["message"];
-  console.log('Response message:\n' + JSON.stringify(responseMessage, null, 2));
+  //console.log('Response message:\n' + JSON.stringify(responseMessage, null, 2));
   addToMessageLog(responseMessage);
 
   // If any function was called in the response
@@ -58,7 +58,7 @@ const runPrompt = async () => {
 
     // Get tool call values
     const toolCall = responseMessage["tool_calls"][0];
-    console.log("Tool call:\n" + JSON.stringify(toolCall, null, 2));
+    //console.log("Tool call:\n" + JSON.stringify(toolCall, null, 2));
 
     //Get tool call ID
     //Used in tool call response
@@ -67,8 +67,8 @@ const runPrompt = async () => {
     // Extract function name and arguments
     const toolCallName = toolCall["function"]["name"];
     const toolCallArgs = JSON.parse(toolCall["function"]["arguments"]);
-    console.log("Function name: " + JSON.stringify(toolCallName, null, 2));
-    console.log("Arguments: " + JSON.stringify(toolCallArgs, null, 2));
+    //console.log("Function name: " + JSON.stringify(toolCallName, null, 2));
+    //console.log("Arguments: " + JSON.stringify(toolCallArgs, null, 2));
 
     callAgentFunction(toolCallName, toolCallArgs, toolCallID);    
 
@@ -78,12 +78,13 @@ const runPrompt = async () => {
       messages: messagesLog,
       tools: agentFunctions.toolsSchema,
     });
-    const responseMessage2 = completion2["choices"][0]["message"];
+    const responseMessage2 = completion2["choices"][0]["message"]["content"];
     console.log(responseMessage2);
   } else {
     console.log("No function call made.");
   }
 
+  main()
 
 }
 
